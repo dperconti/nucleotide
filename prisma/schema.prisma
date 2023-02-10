@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Job {
+  id                  String          @default(cuid()) @id
+  createdAt           DateTime        @default(now()) @map(name: "created_at")
+  updatedAt           DateTime        @updatedAt @map(name: "updated_at")
+  title               String?
+
+  // User Relationship
+  user                User?
+
+  // Organization Relationship
+  organization        Organization?   @relation(fields: [organizationId], references: [id])
+  organizationId      String?
+
+  // Department Relationship
+  department          Department?     @relation(fields: [departmentId], references: [id])
+  departmentId        String?
+
+  // Job Hierarchy
+  reportsToJobId      String?
+  reportsToJob        Job?            @relation("ReportsToJob", fields: [reportsToJobId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reportingJob        Job[]           @relation("ReportsToJob")
+
+  @@map(name: "jobs")
+}
+
+model Department {
+  id                  String          @default(cuid()) @id
+  name                String?
+  createdAt           DateTime        @default(now()) @map(name: "created_at")
+  updatedAt           DateTime        @updatedAt @map(name: "updated_at")
+
+  // Organization Relationship
+  organization        Organization?   @relation(fields: [organizationId], references: [id])
+  organizationId      String?
+
+  // Job Relationship
+  jobs                Job[]
+
+  @@map(name: "departments")
+}
+
+model Organization {
+  id                  String          @default(cuid()) @id
+  name                String?
+  createdAt           DateTime        @default(now()) @map(name: "created_at")
+  updatedAt           DateTime        @updatedAt @map(name: "updated_at")
+
+  // User Relationship
+  users               User[]
+
+  // Job Relationship
+  jobs                Job[]
+
+  // Department Relationship
+  departments         Department[]
+
+  @@map(name: "organizations")
+}
+
+model User {
+  id                  String          @default(cuid()) @id
+  firstName           String?
+  lastName            String?
+  email               String?         @unique
+
+  // Organization Relationship
+  organization        Organization?   @relation(fields: [organizationId], references: [id])
+  organizationId      String?
+
+  // Job Relationship
+  job                 Job?           @relation(fields: [jobId], references: [id])
+  jobId               String?         @unique
+
+  createdAt           DateTime  @default(now()) @map(name: "created_at")
+  updatedAt           DateTime  @updatedAt @map(name: "updated_at")
+  @@map(name: "users")
+}
